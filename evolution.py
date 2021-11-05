@@ -12,41 +12,42 @@
 
 
 #TODO add the data structure of the individuals to generate automatically
-def generatePop(n):
+def generatePop(n, individual):
     """
     Generate the population
 
     :param n: The size of the population
+    :param individual: A function representing an individual
 
     :return: ?
     """
 
-    pass
+    return ([individual]*n)
 
-def fit(ind, f):
+def fitPop(individuals, f):
     """
     Function calculating the fitness of an individual by applying a fitness function for each
 
-    :param ind: The list of individuals
+    :param individuals: The list of individuals
     :param f: The function used to calculate the fitness
 
-    :return: the fitness of the individual (need to decide how it's represented)
+    :return: An array of the fitness of the individuals
     """
 
-    pass
+    return [f(individual) for individual in individuals]
 
-def select(selectionProcess, ind):
+def selectPop(selectionProcess, ind): # 2 bests, tournament, 2 randoms
     """
     Function which select the parents of the next generation
 
     :param selectionProcess: How the parents are selected (tournament, best, random) (as a function ?)
-    :param ind: The individuals
+    :param ind: The individuals # Might need to add the fitness ? or add it to the individuals one way or another
 
     :return:
     """
     pass
 
-def crossover(method, p, parents):
+def crossoverPop(method, p, parents):
     """
     Apply crossover between parents to create new child
 
@@ -58,7 +59,7 @@ def crossover(method, p, parents):
     """
     pass
 
-def mutation(method, p, ind):
+def mutatePop(method, p, ind):
     """
     Apply a mutation to an individual
 
@@ -80,3 +81,10 @@ def createNewGen():
     pass
 
 
+def evolution():
+    """
+    Main function, make the population evolve
+
+    :return: the best individual
+    """
+    pass

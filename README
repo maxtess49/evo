@@ -1,6 +1,21 @@
 Evolutionary Algorithm for M2 ID course: Algorithmes intelligents pour l’aide à la décision
 
 TODO:
-- Onemax model
-- EA functions
-- core algorithm
+- Selection functions
+    - [X] Tournament
+    - [X] Best
+    - [X] Random
+
+- Crossover functions
+    - [ ] Monopoint
+    - [ ] Uniform
+
+- Mutation functions
+    - [ ] Bitflip
+    - [ ] 1Flip
+    - [ ] 3Flip
+    - [ ] 5Flip
+
+- Insertion functions
+    - [ ] Fitness (Worst are discarded)
+    - [ ] Age (Olders are discarded)

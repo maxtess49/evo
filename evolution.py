@@ -1,3 +1,5 @@
+from selectionFunctions import *
+
 #
 #   Ultimately the best would be to have a jupyter notebook to launch instances of the evo algo
 #   and several files having all the functions I would need and that I could replace as I wish
@@ -24,28 +26,40 @@ def generatePop(n, individual):
 
     return ([individual]*n)
 
+# Fitness
 def fitPop(individuals, f):
     """
     Function calculating the fitness of an individual by applying a fitness function for each
 
-    :param individuals: The list of individuals
+    :param individuals: An array of individuals
     :param f: The function used to calculate the fitness
 
-    :return: An array of the fitness of the individuals
+    :return: An array with the individuals plus their fitness [(individual, fitness)]
     """
 
-    return [f(individual) for individual in individuals]
+    return [(individual, f(individual)) for individual in individuals]
 
-def selectPop(selectionProcess, ind): # 2 bests, tournament, 2 randoms
+def select(selectionProcess, ind): # 2 bests, tournament, 2 randoms
     """
     Function which select the parents of the next generation
 
-    :param selectionProcess: How the parents are selected (tournament, best, random) (as a function ?)
-    :param ind: The individuals # Might need to add the fitness ? or add it to the individuals one way or another
+    :param selectionProcess: How the parents are selected (tournament, best or random as a string)
+    :param ind: An array of individuals with their fitness
 
-    :return:
+    :return: The choosen ones
     """
-    pass
+
+    if selectionProcess == "tournament":
+        return tournamentSelection(ind)
+
+    elif selectionProcess == "best":
+        return bestSelection(ind)
+
+    elif selectionProcess == "random":
+        return randomSelection(ind)
+
+    else:
+        raise Exception("No valid selection process was choosen.")
 
 def crossoverPop(method, p, parents):
     """
@@ -80,7 +94,8 @@ def createNewGen():
     """
     pass
 
-
+# Function to generate individual, size of pop, fitness function, selection method, crossover method or probabilities for crossover,
+# mutation method or probabilities for mutation, insertion method
 def evolution():
     """
     Main function, make the population evolve

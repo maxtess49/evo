@@ -21,3 +21,23 @@ def fit(individual):
     """
 
     return individual.count(1)
+
+# Crossover functions
+def cMonopoint():
+    pass
+
+def cUniform():
+    pass
+
+# Mutation functions
+def mBitFlip():
+    pass
+
+def mOneFlip():
+    pass
+
+def mThreeFlip():
+    pass
+
+def mFiveFlip():
+    pass

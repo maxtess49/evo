@@ -2,23 +2,23 @@
 
 ## TODO:
 ### Selection functions
-    - [X] Tournament
-    - [X] Best
-    - [X] Random
+- [X] Tournament
+- [X] Best
+- [X] Random
 
 ### Crossover functions
-    - [ ] Monopoint
-    - [ ] Uniform
+- [ ] Monopoint
+- [ ] Uniform
 
 ### Mutation functions
-    - [ ] Bitflip
-    - [ ] 1Flip
-    - [ ] 3Flip
-    - [ ] 5Flip
+- [ ] Bitflip
+- [ ] 1Flip
+- [ ] 3Flip
+- [ ] 5Flip
 
 ### Insertion functions
-    - [X] Fitness (Worst are discarded)
-    - [X] Age (Olders are discarded)
+- [X] Fitness (Worst are discarded)
+- [X] Age (Olders are discarded)
 
 ## How-To
 Comming soon

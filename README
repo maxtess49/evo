@@ -1,24 +1,24 @@
 # Evolutionary Algorithm for M2 ID course: Algorithmes intelligents pour l’aide à la décision
 
-### TODO:
-- Selection functions
+## TODO:
+###Selection functions
     - [X] Tournament
     - [X] Best
     - [X] Random
 
-- Crossover functions
+###Crossover functions
     - [ ] Monopoint
     - [ ] Uniform
 
-- Mutation functions
+###Mutation functions
     - [ ] Bitflip
     - [ ] 1Flip
     - [ ] 3Flip
     - [ ] 5Flip
 
-- Insertion functions
+###Insertion functions
     - [X] Fitness (Worst are discarded)
     - [X] Age (Olders are discarded)
 
-### How-To
+## How-To
 Comming soon

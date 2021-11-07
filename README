@@ -1,6 +1,6 @@
-Evolutionary Algorithm for M2 ID course: Algorithmes intelligents pour l’aide à la décision
+#Evolutionary Algorithm for M2 ID course: Algorithmes intelligents pour l’aide à la décision
 
-TODO:
+### TODO:
 - Selection functions
     - [X] Tournament
     - [X] Best
@@ -17,5 +17,8 @@ TODO:
     - [ ] 5Flip
 
 - Insertion functions
-    - [ ] Fitness (Worst are discarded)
-    - [ ] Age (Olders are discarded)
+    - [X] Fitness (Worst are discarded)
+    - [X] Age (Olders are discarded)
+
+### How-To
+Comming soon

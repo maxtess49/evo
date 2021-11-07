@@ -1,3 +1,4 @@
+# Generation of individuals
 def ind_zero_array(n):
     """
     Generate an individual as an array of int with size n, populated with zeros
@@ -11,6 +12,7 @@ def ind_zero_array(n):
 
 ##TODO add a function to create random zeros and ones individuals
 
+# Function to calculate the fitness of an individual
 def fit(individual):
     """
     Calculate a score for the individual (the more ones the better)
@@ -23,21 +25,45 @@ def fit(individual):
     return individual.count(1)
 
 # Crossover functions
-def cMonopoint():
+def monopoint(parents, nbChildren):
+    """
+    Use monopoint crossover on parents to make children
+
+    :param parents: A list of parents
+    :param nbChildren: The number of children to make
+
+    :return: A list of children
+    """
+
     pass
 
-def cUniform():
+def uniform(parents, nbChildren):
+    """
+    Use uniform crossover on parents to make children
+
+    :param parents: A list of parents
+    :param nbChildren: The number of children to make
+
+    :return: A list of children
+    """
+
     pass
 
 # Mutation functions
-def mBitFlip():
+def bitFlip(ind):
+    """
+
+
+    :param ind:
+    :return:
+    """
     pass
 
-def mOneFlip():
+def oneFlip(ind):
     pass
 
-def mThreeFlip():
+def threeFlip(ind):
     pass
 
-def mFiveFlip():
+def fiveFlip(ind):
     pass

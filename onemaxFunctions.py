@@ -43,8 +43,8 @@ def monopoint(parents, nbChildren=2):
 
     while len(children) < nbChildren:
         cut = random.randint(1, len(parents[0])-1)
-        children = children + [parents[0][cut:]+parents[1][:cut]]
-        children = children + [parents[1][cut:]+parents[0][:cut]]
+        children += [parents[0][cut:]+parents[1][:cut]]
+        children += [parents[1][cut:]+parents[0][:cut]]
     if len(children) > nbChildren:
         random.shuffle(children)
         children = children[:nbChildren]
@@ -64,7 +64,6 @@ def uniform(parents, nbChildren=2, p=0.5):
     """
 
     children = []
-
     while len(children) < nbChildren:
         child = [0]*len(parents[0])
         for i in range(len(child)):
@@ -72,7 +71,7 @@ def uniform(parents, nbChildren=2, p=0.5):
                 child[i] = parents[0][i]
             else:
                 child[i] = parents[1][i]
-        children = children + child
+        children += [child]
 
     return children
 
@@ -88,13 +87,16 @@ def bitFlip(ind):
 
     for i in range(len(ind)):
         if random.random() < 1/len(ind):
-            ind[i] = not(ind[i])
+            if ind[i] == 1:
+                ind[i] = 0
+            else:
+                ind[i] = 1
 
     return ind
 
 def numBitFlip(ind, numGenesFlip):
     """
-    Mutate the individual by flipping a random gene
+    Mutate the individual by flipping random genes
 
     :param ind: The individual to mutate
     :param numGenesFlip: Number of genes to flip (1, 3, 5 flip)
@@ -102,8 +104,44 @@ def numBitFlip(ind, numGenesFlip):
     :return: The mutated individual
     """
 
-    bitsToFlip = random.sample(range(len[ind]), numGenesFlip)
+    bitsToFlip = random.sample(range(len(ind)), numGenesFlip)
     for i in bitsToFlip:
-        ind[i] = not ind[i]
+        if ind[i] == 1:
+            ind[i] = 0
+        else:
+            ind[i] = 1
 
     return ind
+
+def oneFlip(ind):
+    """
+    Mutate the individual by flipping a random genes
+
+    :param ind: The individual to mutate
+
+    :return: The mutated individual
+    """
+
+    return numBitFlip(ind, 1)
+
+def threeFlip(ind):
+    """
+    Mutate the individual by flipping three random genes
+
+    :param ind: The individual to mutate
+
+    :return: The mutated individual
+    """
+
+    return numBitFlip(ind, 3)
+
+def fiveFlip(ind):
+    """
+    Mutate the individual by flipping five random genes
+
+    :param ind: The individual to mutate
+
+    :return: The mutated individual
+    """
+
+    return numBitFlip(ind, 5)

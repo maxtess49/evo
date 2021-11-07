@@ -1,4 +1,7 @@
 # Generation of individuals
+import random
+
+
 def ind_zero_array(n):
     """
     Generate an individual as an array of int with size n, populated with zeros
@@ -25,45 +28,82 @@ def fit(individual):
     return individual.count(1)
 
 # Crossover functions
-def monopoint(parents, nbChildren):
+def monopoint(parents, nbChildren=2):
     """
     Use monopoint crossover on parents to make children
+    (Cut the pool of genes from parents in a point and create child by taking a part from each parent)
 
-    :param parents: A list of parents
+    :param parents: A list of two parents
     :param nbChildren: The number of children to make
 
     :return: A list of children
     """
 
-    pass
+    children = []
 
-def uniform(parents, nbChildren):
+    while len(children) < nbChildren:
+        cut = random.randint(1, len(parents[0])-1)
+        children = children + [parents[0][cut:]+parents[1][:cut]]
+        children = children + [parents[1][cut:]+parents[0][:cut]]
+    if len(children) > nbChildren:
+        random.shuffle(children)
+        children = children[:nbChildren]
+
+    return children
+
+def uniform(parents, nbChildren=2, p=0.5):
     """
     Use uniform crossover on parents to make children
+    (Each gene as a probability to come from either parent)
 
-    :param parents: A list of parents
+    :param parents: A list of two parents
     :param nbChildren: The number of children to make
+    :param p: Probability to take first parent genes rather than second parent ones
 
     :return: A list of children
     """
 
-    pass
+    children = []
+
+    while len(children) < nbChildren:
+        child = [0]*len(parents[0])
+        for i in range(len(child)):
+            if random.random() < p:
+                child[i] = parents[0][i]
+            else:
+                child[i] = parents[1][i]
+        children = children + child
+
+    return children
 
 # Mutation functions
 def bitFlip(ind):
     """
+    Mutate the individual by flipping a gene (each gene has 1/length of individual chance to be mutated)
 
+    :param ind: The individual to mutate
 
-    :param ind:
-    :return:
+    :return: The mutated individual
     """
-    pass
 
-def oneFlip(ind):
-    pass
+    for i in range(len(ind)):
+        if random.random() < 1/len(ind):
+            ind[i] = not(ind[i])
 
-def threeFlip(ind):
-    pass
+    return ind
 
-def fiveFlip(ind):
-    pass
+def numBitFlip(ind, numGenesFlip):
+    """
+    Mutate the individual by flipping a random gene
+
+    :param ind: The individual to mutate
+    :param numGenesFlip: Number of genes to flip (1, 3, 5 flip)
+
+    :return: The mutated individual
+    """
+
+    bitsToFlip = random.sample(range(len[ind]), numGenesFlip)
+    for i in bitsToFlip:
+        ind[i] = not ind[i]
+
+    return ind

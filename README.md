@@ -7,14 +7,14 @@
 - [X] Random
 
 ### Crossover functions
-- [ ] Monopoint
-- [ ] Uniform
+- [X] Monopoint
+- [X] Uniform
 
 ### Mutation functions
-- [ ] Bitflip
-- [ ] 1Flip
-- [ ] 3Flip
-- [ ] 5Flip
+- [X] Bitflip
+- [X] 1Flip
+- [X] 3Flip
+- [X] 5Flip
 
 ### Insertion functions
 - [X] Fitness (Worst are discarded)

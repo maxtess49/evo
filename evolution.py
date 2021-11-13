@@ -28,7 +28,10 @@ def generatePop(n, individual):
 
     # We randomize the list in case we use age to remove individuals, as it won't be always the same
     # to be removed (if we use the same list)
-    population = [individual]*n
+    population = []
+    for i in range(n):
+        population += [individual()]
+
     random.shuffle(population)
     return population
 

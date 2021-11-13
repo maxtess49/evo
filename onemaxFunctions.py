@@ -1,7 +1,6 @@
-# Generation of individuals
 import random
 
-
+# Generation of individuals
 def ind_zero_array(n):
     """
     Generate an individual as an array of int with size n, populated with zeros
@@ -11,7 +10,7 @@ def ind_zero_array(n):
     :return: The individual
     """
 
-    return ([0]*n)
+    return lambda : ([0]*n)
 
 ##TODO add a function to create random zeros and ones individuals
 
@@ -20,7 +19,7 @@ def fit(individual):
     """
     Calculate a score for the individual (the more ones the better)
 
-    :param individual: An individual to test
+    :param individual: An individual to test (A list of int either 1 or 0)
 
     :return: The score of the individual
     """

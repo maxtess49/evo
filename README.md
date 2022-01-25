@@ -27,7 +27,7 @@
 
 ### Random
 - [X] Random seed
-- [ ] Random seed choice
+- [X] Random seed choice
 
 ### Graf generator
 - [ ] Add generator to main

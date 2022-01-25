@@ -1,5 +1,6 @@
 from selectionFunctions import *
 from insertionFunctions import *
+from onemaxFunctions import *
 from reinforcmentLearning import *
 import os
 import csv
@@ -17,16 +18,18 @@ class GeneticAlgorithm:
 
     def __init__(self, json_file=None):
         if json_file is not None:
-            parameters = json.loads(json_file)
-            self.selection_method = parameters["selection_method"]
-            self.crossover_method = parameters["crossover_method"]
+            file = open(json_file)
+            parameters = json.load(file)
+            self.selection_method = globals()[parameters["selection_method"]]
+            self.crossover_method = globals()[parameters["crossover_method"]]
             self.crossover_rate = parameters["crossover_rate"]
-            self.mutation_method = parameters["mutation_method"]
+            self.mutation_method = globals()[parameters["mutation_method"]]
             self.mutation_rate = parameters["mutation_rate"]
-            self.insertion_method = parameters["insertion_method"]
+            self.insertion_method = globals()[parameters["insertion_method"]]
             self.endCondition = (parameters["endCondition"][0], parameters["endCondition"][1])
-            self.fitness_function = parameters["fitness_function"]
+            self.fitness_function = globals()[parameters["fitness_function"]]
             self.seed = parameters["seed"]
+            file.close()
         else:
             self.selection_method = None
             self.crossover_method = None
@@ -185,12 +188,12 @@ class GeneticAlgorithm:
             self.mutation_method.__name__ + "_" + self.fitness_function.__name__
 
         root_data_files = './data/'+str(self.endCondition)+"/"
-        this_data_folder = root_data_files + characteristics + "/"
+        data_folder = root_data_files + characteristics + "/"
 
-        if not os.path.exists(this_data_folder):
-            os.makedirs(this_data_folder)
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
 
-        json_file = open(this_data_folder + '/parameters.json', "w")
+        json_file = open(data_folder + '/parameters.json', "w")
         parameters = {
             "selection_method": self.selection_method,
             "crossover_method": self.crossover_method.__name__,
@@ -198,18 +201,19 @@ class GeneticAlgorithm:
             "mutation_method": self.mutation_method.__name__,
             "mutation_rate": self.mutation_rate,
             "endCondition": self.endCondition,
-            "fitness_function": self.fitness_function.__name__
+            "fitness_function": self.fitness_function.__name__,
+            "seed": self.seed
         }
         json_file.write(json.dumps(parameters))
         json_file.close()
 
-        csv_file = open(this_data_folder + "/data.csv", "w", encoding="UTF8", newline="")
+        csv_file = open(data_folder + "/data.csv", "w", encoding="UTF8", newline="")
         writer = csv.writer(csv_file)
         # Write header
         writer.writerow(["min_fitness", "max_fitness", "mean", "standart_deviation"])
         csv_file.close()
 
-        return this_data_folder
+        return data_folder
 
     # Main method of ga, Darwin would be proud
     def evolution(self, indGeneration, fit, crossoverMethod, mutationMethod, insertionMethod, popSize=200,
@@ -245,8 +249,7 @@ class GeneticAlgorithm:
         population = result["population_fitness"]
         maxFitness = result["max_fit"]
 
-        # TODO check that it works the way it was intended, I might be dumb
-        while ((endCondition[0] is not None and endCondition[0] < maxFitness) or (generation < endCondition[1])):
+        while ((endCondition[0] is not None and endCondition[0] < maxFitness) and (generation < endCondition[1])):
             # select
             parents = self._select(selectionMethod, population)
             # cross

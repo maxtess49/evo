@@ -1,5 +1,4 @@
 from evolution import *
-from onemaxFunctions import *
 import csv
 
 # Main file, used to retrieve parameters from json file and launch the evolution

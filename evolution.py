@@ -1,225 +1,281 @@
 from selectionFunctions import *
 from insertionFunctions import *
-from math import floor
+from reinforcmentLearning import *
+import os
+import csv
+import json
+from statistics import pstdev, mean
 
 #
-#   Ultimately the best would be to have a jupyter notebook to launch instances of the evo algo
-#   and several files having all the functions I would need and that I could replace as I wish
-#   And at first simply having a main python file that I could toy with until I'm sure my functions are written right
-#   Or maybe it's not how it's meant to be
+# Author: Maxence Marot
 #
-#   Ou ptet que ce que je dis c'est de la merde et faut pas faire ça lol
-
-################################################################
-# Maybe I should make a class out of this, and keep the population generated as an attribute
-# If I decide to do so, I need to remove each "ind" of some functions
+# last update 25/01/22
+#
 
 
-#TODO add the data structure of the individuals to generate automatically
-def generatePop(n, individual):
-    """
-    Generate the population
+class GeneticAlgorithm:
 
-    :param n: The size of the population
-    :param individual: A function representing an individual
+    def __init__(self, json_file=None):
+        if json_file is not None:
+            parameters = json.loads(json_file)
+            self.selection_method = parameters["selection_method"]
+            self.crossover_method = parameters["crossover_method"]
+            self.crossover_rate = parameters["crossover_rate"]
+            self.mutation_method = parameters["mutation_method"]
+            self.mutation_rate = parameters["mutation_rate"]
+            self.insertion_method = parameters["insertion_method"]
+            self.endCondition = (parameters["endCondition"][0], parameters["endCondition"][1])
+            self.fitness_function = parameters["fitness_function"]
+            self.seed = parameters["seed"]
+        else:
+            self.selection_method = None
+            self.crossover_method = None
+            self.crossover_rate = None
+            self.mutation_method = None
+            self.mutation_rate = None
+            self.insertion_method = None
+            self.endCondition = None
+            self.fitness_function = None
+            self.seed = None
 
-    :return: A list of individuals
-    """
+    # Setters
+    def setSelection(self, method):
+        self.selection_method = method
 
-    # We randomize the list in case we use age to remove individuals, as it won't be always the same
-    # to be removed (if we use the same list)
-    population = []
-    for i in range(n):
-        population += [individual()]
+    def setCrossover(self, method, prob=None):
+        self.crossover_method = method
+        if prob is not None:
+            self.crossover_rate = prob
 
-    random.shuffle(population)
-    return population
+    def setMutation(self, method, prob=None):
+        self.mutation_method = method
+        if prob is not None:
+            self.mutation_rate = prob
 
-# Fitness
-def fitPop(individuals, f):
-    """
-    Function calculating the fitness of an individual by applying a fitness function for each
+    def setInsertion(self, method):
+        self.insertion_method = method
 
-    :param individuals: A list of individuals
-    :param f: The function used to calculate the fitness
+    def setFitness(self, method):
+        self.fitness_function = method
 
-    :return: A list with the individuals plus their fitness [(individual, fitness)]
-    """
+    def setEndCond(self, endCond):
+        self.endCondition = endCond
 
-    if type(individuals[0]) == tuple:
-        population_fitness = [(individual[0], f(individual[0])) for individual in individuals]
-    else:
-        population_fitness = [(individual, f(individual)) for individual in individuals]
+    def setSeed(self, seed):
+        self.seed = seed
+        random.seed(seed)
 
-    sum_fitness = 0
-    for element in population_fitness:
-        sum_fitness += element[1]
+    def _generatePop(self, n, individual):
+        """
+        Generate the population
 
-    #Calculate first quartile
-    firstQuart = (len(population_fitness)+3)/4
-    if firstQuart.is_integer():
-        firstQuart = population_fitness[int(firstQuart) - 1][1]
-    else:
-        firstQuart = (population_fitness[int(firstQuart) - 1][1] + population_fitness[int(firstQuart)][1] * 3) / 4
+        :param n: The size of the population
+        :param individual: A function representing an individual
 
-    # Calculate median
-    median = (len(population_fitness) + 1) / 2
-    if median.is_integer():
-        median = population_fitness[int(median) - 1][1]
-    else:
-        median = (population_fitness[int(median) - 1][1] + population_fitness[int(median)][1]) / 2
+        :return: A list of individuals
+        """
 
-    # Calculate third quartile
-    thirdQuart = (len(population_fitness) * 3 + 1) / 4
-    if thirdQuart.is_integer():
-        thirdQuart = population_fitness[int(thirdQuart)-1][1]
-    else:
-        thirdQuart = (population_fitness[int(thirdQuart) - 1][1] * 3 + population_fitness[int(thirdQuart)][1]) / 4
-    return {"population_fitness": population_fitness,
-            "min_fit": min(population_fitness, key=lambda fitness:fitness[1])[1],
-            "max_fit": max(population_fitness, key=lambda fitness:fitness[1])[1],
-            "mean_fit": sum_fitness/len(population_fitness),
-            "first_quartile": firstQuart,
-            "median":median,
-            "third_quartile":thirdQuart}
+        # We randomize the list in case we use age to remove individuals, as it won't be always the same
+        # to be removed (if we use the same list)
+        population = []
+        for i in range(n):
+            population += [individual()]
 
-# Selection
-def select(selectionProcess, ind): # 2 bests, tournament, 2 randoms
-    """
-    Function which select the parents of the next generation
+        random.shuffle(population)
+        return population
 
-    :param selectionProcess: How the parents are selected (tournament, best or random as a string)
-    :param ind: A list of individuals with their fitness
+    # Fitness
+    def _fitPop(self, individuals, f, dataFolderName=None):
+        """
+        Function calculating the fitness of an individual by applying a fitness function for each
 
-    :return: The choosen ones
-    """
+        :param individuals: A list of individuals
+        :param f: The function used to calculate the fitness
+        :param dataFolderName: The path to the folder in which we write the population datas
 
-    if selectionProcess == "tournament":
-        selected = []
-        for individual in tournamentSelection(ind):
-            selected += [individual[0]]
-        return selected
+        :return: A list with the individuals plus their fitness [(individual, fitness)]
+        """
 
-    elif selectionProcess == "best":
-        selected = []
-        for individual in bestSelection(ind):
-            selected += [individual[0]]
-        return selected
+        if type(individuals[0]) == tuple:
+            population_fitness = [(individual[0], f(individual[0])) for individual in individuals]
+        else:
+            population_fitness = [(individual, f(individual)) for individual in individuals]
 
-    elif selectionProcess == "random":
-        selected = []
-        for individual in randomSelection(ind):
-            selected += [individual[0]]
-        return selected
+        maxFit = max(population_fitness, key=lambda fitness: fitness[1])[1]
 
+        if dataFolderName is not None:
+            sum_fitness = 0
+            for element in population_fitness:
+                sum_fitness += element[1]
 
+            # Calculate a bunch of sophisticated (or not) stats
+            meanFit = mean([fit[1] for fit in population_fitness])
+            std_dev = pstdev([fit[1] for fit in population_fitness], mu=meanFit)
+            minFit = min(population_fitness, key=lambda fitness: fitness[1])[1]
 
-    else:
-        raise Exception("No valid selection process was choosen.")
+            # Write to csv
+            csv_file = open(dataFolderName+"/data.csv", "a", encoding="UTF8", newline="")
+            writer = csv.writer(csv_file)
+            writer.writerow([str(minFit), str(maxFit), str(meanFit), str(std_dev)])
+            csv_file.close()
 
-# Crossover
-def crossoverPop(method, p, parents, nbChildren=2):
-    """
-    Apply crossover between parents to create new children
+        return {"population_fitness": population_fitness, "max_fit": maxFit}
 
-    :param method: Crossover function to apply
-    :param p: Probability of the crossover happening
-    :param parents: The newlywed happy couple having a bunch of children
-    :param nbChildren: The number of children the happy couple shall have
+    # Selection
+    def _select(self, selectionProcess, ind):  # 2 bests, tournament, 2 randoms
+        """
+        Function which select the parents of the next generation
 
-    :return: A list of children or an empty list
-    """
+        :param selectionProcess: How the parents are selected (tournament, best or random as a string)
+        :param ind: A list of individuals with their fitness
 
-    if random.random() < p:
-        return method(parents, nbChildren)
-    return []
+        :return: The choosen ones
+        """
 
-#Mutation
-def mutatePop(method, p, ind):
-    """
-    Apply a mutation to a population
+        return selectionProcess(ind)
 
-    :param method: Mutation function to apply
-    :param p: Probability of the mutation happening
-    :param ind: Individual population on which the mutation happens
+    # Crossover
+    def _crossoverPop(self, method, parents):
+        """
+        Apply crossover between parents to create new children
 
-    :return: A list of mutated individuals or an empty list
-    """
+        :param method: Crossover function to apply
+        :param parents: The newlywed happy couple having a bunch of children
 
-    if random.random() < p:
+        :return: A list of children or an empty list
+        """
+
+        return method(parents)
+
+    # Mutation
+    def _mutatePop(self, method, ind):
+        """
+        Apply a mutation to a population
+
+        :param method: Mutation function to apply
+        :param ind: Individual population on which the mutation happens
+
+        :return: A list of mutated individuals or an empty list
+        """
+
         return [method(individual) for individual in ind]
-    return []
 
-# Insertion
-def insertion(population, children, method, nbToRemove):
-    """
-    Insert newly born children to the population
+    # Insertion
+    def _insertion(self, population, children, method):
+        """
+        Insert newly born children to the population
 
-    :param children: Children to add to the population
-    :param population: Population in which we add children as a list
-    :param method: Method of removal
-    :param nbToRemove: Number of individuals to remove on insertion
+        :param children: Children to add to the population
+        :param population: Population in which we add children as a list
+        :param method: Method of removal
 
-    :return: the population
-    """
+        :return: the population
+        """
 
-    return method(population)+children
+        return method(population)+children
 
-def evolution(indGeneration, fit, crossoverMethod, mutationMethod, insertionMethod, popSize=200, selectionMethod="tournament", crossoverRate=0.1,
-        mutationRate=0.1, endCondition=(None, 100), childrenNbrOnCross = 2, removalNbrOnInsert=None):
-    """
-    Main function, make the population evolve
+    def _createDataLog(self):
+        """
+        Create a folder in which we create a json file for the caracteristics of the ga and a csv with the data
 
-    :param indGeneration: Function which generate an individual
-    :param fit: Fitness function to get individual performance
-    :param crossoverMethod: Crossover function to apply
-    :param mutationMethod: Mutation function to apply
-    :param insertionMethod: Insertion function to apply
+        :return: nothing
+        """
 
-    :param popSize: Size of the population
-    :param selectionMethod: Selection function to apply (tournament, best or random as a string)
-    :param crossoverRate: Rate of crossovers happening
-    :param mutationRate: Rate of mutation
-    :param endCondition: End condition of the simulation (As a tuple, (wantedFitness, nmbGeneration))
-    :param childrenNbrOnCross: Number of children added made on each crossover
-    :param removalNbrOnInsert: Number of individuals to remove on insertion (Default: None, equals childrenNbrOnCross)
+        characteristics = self.selection_method + "_" + self.crossover_method.__name__ + "_" + \
+            self.mutation_method.__name__ + "_" + self.fitness_function.__name__
 
-    :return: The bestest individual
-    """
+        root_data_files = './data/'+str(self.endCondition)+"/"
+        this_data_folder = root_data_files + characteristics + "/"
 
-    population = generatePop(popSize, indGeneration)
+        if not os.path.exists(this_data_folder):
+            os.makedirs(this_data_folder)
 
-    maxFitness = -1
-    generation = 0
+        json_file = open(this_data_folder + '/parameters.json', "w")
+        parameters = {
+            "selection_method": self.selection_method,
+            "crossover_method": self.crossover_method.__name__,
+            "crossover_rate": self.crossover_rate,
+            "mutation_method": self.mutation_method.__name__,
+            "mutation_rate": self.mutation_rate,
+            "endCondition": self.endCondition,
+            "fitness_function": self.fitness_function.__name__
+        }
+        json_file.write(json.dumps(parameters))
+        json_file.close()
 
-    # fit
-    result = fitPop(population, fit)
-    population = result["population_fitness"]
-    maxFitness = result["max_fit"]
+        csv_file = open(this_data_folder + "/data.csv", "w", encoding="UTF8", newline="")
+        writer = csv.writer(csv_file)
+        # Write header
+        writer.writerow(["min_fitness", "max_fitness", "mean", "standart_deviation"])
+        csv_file.close()
 
-    while ((endCondition[0] != None and endCondition[0] < maxFitness) or generation < endCondition[1]):
-        #select
-        parents = select(selectionMethod, population)
-        #cross
-        children = crossoverPop(crossoverMethod, crossoverRate, parents, childrenNbrOnCross)
+        return this_data_folder
 
-        if len(children) > 0:
-            #mutate
-            children = mutatePop(mutationMethod, mutationRate, children)
+    # Main method of ga, Darwin would be proud
+    def evolution(self, indGeneration, fit, crossoverMethod, mutationMethod, insertionMethod, popSize=200,
+                  selectionMethod="tournament", endCondition=(None, 100)):
+        """
+        Main function, make the population evolve
+        Generate a csv file with data about the population
 
-            if len(children) > 0:
-                children = fitPop(children, fit)["population_fitness"]
+        :param indGeneration: Function which generate an individual
+        :param fit: Fitness function to get individual performance
+        :param crossoverMethod: Crossover function to apply
+        :param mutationMethod: Mutation function to apply
+        :param insertionMethod: Insertion function to apply
 
-                #insert
-                if removalNbrOnInsert != None:
-                    population = insertion(population, children, insertionMethod, removalNbrOnInsert)
-                else:
-                    population = insertion(population, children, insertionMethod, childrenNbrOnCross)
+        :param popSize: Size of the population
+        :param selectionMethod: Selection function to apply (tournament, best or random as a string)
+        :param endCondition: End condition of the simulation (As a tuple, (wantedFitness, nmbGeneration))
+
+        :return: The bestest individual
+        """
+
+        random.seed(self.seed)
+
+        population = self._generatePop(popSize, indGeneration)
+
+        generation = 0
+
+        # Create a folder to put the data
+        data_folder = self._createDataLog()
 
         # fit
-        result = fitPop(population, fit)
+        result = self._fitPop(population, fit, data_folder)
+        population = result["population_fitness"]
         maxFitness = result["max_fit"]
 
-        generation += 1
+        # TODO check that it works the way it was intended, I might be dumb
+        while ((endCondition[0] is not None and endCondition[0] < maxFitness) or (generation < endCondition[1])):
+            # select
+            parents = self._select(selectionMethod, population)
+            # cross
+            if random.random() < self.crossover_rate:
+                children = self._crossoverPop(crossoverMethod, parents)
 
-    return bestSelection(population, 1)
+                # mutate
+                if random.random() < self.mutation_rate:
+                    children = self._mutatePop(mutationMethod, children)
+
+                children = self._fitPop(children, fit)["population_fitness"]
+
+                # insert
+                population = self._insertion(population, children, insertionMethod)
+
+            # fit
+            result = self._fitPop(population, fit, data_folder)
+            maxFitness = result["max_fit"]
+
+            generation += 1
+
+        return bestSelection(population, 1)
+
+
+# Notes à moi même, ce que je peux faire pour compter les méthodes, c'est juste garder une variable que j'incrémente à chaque fois qu'un appel est passé
+# Et pour la roulette, au lieu d'utiliser un int, j'utilise un tableau, et j'incrémente là où il faut, puis pour ajouter dans le csv
+# Je mets juste dans le header le nom de la fonction utilisée, et je me débrouille pour que si c'est la roulette, je mets les méthodes de la roulettes séparées par des ;
+# et pour mettre le nombre d'utilisation des méthodes de la roulette, je mets chaque valeur du tableau séparées par des ; aussi
+
+# Peut être que je dois garder la proba aussi pour les méthodes de la roulette ?
+
+# Compter nombre de cross / de mutations et de fitness ?

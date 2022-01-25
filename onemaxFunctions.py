@@ -12,8 +12,6 @@ def ind_zero_array(n):
 
     return lambda : ([0]*n)
 
-##TODO add a function to create random zeros and ones individuals
-
 # Function to calculate the fitness of an individual
 def fit(individual):
     """
@@ -27,43 +25,41 @@ def fit(individual):
     return individual.count(1)
 
 # Crossover functions
-def monopoint(parents, nbChildren=2):
+def monopoint(parents):
     """
     Use monopoint crossover on parents to make children
     (Cut the pool of genes from parents in a point and create child by taking a part from each parent)
 
     :param parents: A list of two parents
-    :param nbChildren: The number of children to make
 
     :return: A list of children
     """
 
     children = []
 
-    while len(children) < nbChildren:
+    while len(children) < 2:
         cut = random.randint(1, len(parents[0])-1)
         children += [parents[0][cut:]+parents[1][:cut]]
         children += [parents[1][cut:]+parents[0][:cut]]
-    if len(children) > nbChildren:
+    if len(children) > 2:
         random.shuffle(children)
-        children = children[:nbChildren]
+        children = children[:2]
 
     return children
 
-def uniform(parents, nbChildren=2, p=0.5):
+def uniform(parents, p=0.5):
     """
     Use uniform crossover on parents to make children
     (Each gene as a probability to come from either parent)
 
     :param parents: A list of two parents
-    :param nbChildren: The number of children to make
     :param p: Probability to take first parent genes rather than second parent ones
 
     :return: A list of children
     """
 
     children = []
-    while len(children) < nbChildren:
+    while len(children) < 2:
         child = [0]*len(parents[0])
         for i in range(len(child)):
             if random.random() < p:
@@ -144,3 +140,13 @@ def fiveFlip(ind):
     """
 
     return numBitFlip(ind, 5)
+
+
+# A jeter, faire une roulette gnérique izi
+
+# Possible d'en faire une plus générique en donnent une liste de fonctions et en faisant une liste de proba en fonction de la taille
+# de cette liste, puis si proba, alors return la méthode de la liste de base récupérée
+# L'avantage, c'est que je peux y faire un array pour garder le nombre d'utilisation à chaque fois
+# Si la roulette s'utilise pour crossover et insertion aussi, je ferai 3 array et je mettrais à jour en fonction de l'appel a genre roulette(methods, "c" ou "m" ou "i")
+
+# Doit retourner une fonction genre bitflip ou fiveflip, pas bitflip() ou fiveflip()

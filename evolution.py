@@ -20,6 +20,7 @@ class GeneticAlgorithm:
         if json_file is not None:
             file = open(json_file)
             parameters = json.load(file)
+            self.ind_generation = globals()[parameters["ind_generation"]]
             self.selection_method = globals()[parameters["selection_method"]]
             self.crossover_method = globals()[parameters["crossover_method"]]
             self.crossover_rate = parameters["crossover_rate"]
@@ -31,6 +32,7 @@ class GeneticAlgorithm:
             self.seed = parameters["seed"]
             file.close()
         else:
+            self.ind_generation = None
             self.selection_method = None
             self.crossover_method = None
             self.crossover_rate = None
@@ -42,6 +44,9 @@ class GeneticAlgorithm:
             self.seed = None
 
     # Setters
+    def setIndividualBase(self, ind_generation):
+        self.ind_generation = ind_generation
+
     def setSelection(self, method):
         self.selection_method = method
 
@@ -75,6 +80,7 @@ class GeneticAlgorithm:
         :param n: The size of the population
         :param individual: A function representing an individual
 
+        :rtype: list
         :return: A list of individuals
         """
 
@@ -96,7 +102,8 @@ class GeneticAlgorithm:
         :param f: The function used to calculate the fitness
         :param dataFolderName: The path to the folder in which we write the population datas
 
-        :return: A list with the individuals plus their fitness [(individual, fitness)]
+        :rtype: dict
+        :return: A dict with a list of the individuals plus their fitness, and the highest fit of the population
         """
 
         if type(individuals[0]) == tuple:
@@ -112,8 +119,8 @@ class GeneticAlgorithm:
                 sum_fitness += element[1]
 
             # Calculate a bunch of sophisticated (or not) stats
-            meanFit = mean([fit[1] for fit in population_fitness])
-            std_dev = pstdev([fit[1] for fit in population_fitness], mu=meanFit)
+            meanFit = mean([fitness[1] for fitness in population_fitness])
+            std_dev = pstdev([fitness[1] for fitness in population_fitness], mu=meanFit)
             minFit = min(population_fitness, key=lambda fitness: fitness[1])[1]
 
             # Write to csv
@@ -132,6 +139,7 @@ class GeneticAlgorithm:
         :param selectionProcess: How the parents are selected (tournament, best or random as a string)
         :param ind: A list of individuals with their fitness
 
+        :rtype: list
         :return: The choosen ones
         """
 
@@ -145,10 +153,11 @@ class GeneticAlgorithm:
         :param method: Crossover function to apply
         :param parents: The newlywed happy couple having a bunch of children
 
+        :rtype: list
         :return: A list of children or an empty list
         """
 
-        return method(parents)
+        return method([parents[0][0], parents[1][0]])
 
     # Mutation
     def _mutatePop(self, method, ind):
@@ -158,6 +167,7 @@ class GeneticAlgorithm:
         :param method: Mutation function to apply
         :param ind: Individual population on which the mutation happens
 
+        :rtype: list
         :return: A list of mutated individuals or an empty list
         """
 
@@ -172,6 +182,7 @@ class GeneticAlgorithm:
         :param population: Population in which we add children as a list
         :param method: Method of removal
 
+        :rtype: list
         :return: the population
         """
 
@@ -181,21 +192,22 @@ class GeneticAlgorithm:
         """
         Create a folder in which we create a json file for the caracteristics of the ga and a csv with the data
 
-        :return: nothing
+        :rtype: str
+        :return: The name of the created folder (might remove and make it an attribute)
         """
 
-        characteristics = self.selection_method + "_" + self.crossover_method.__name__ + "_" + \
+        characteristics = self.selection_method.__name__ + "_" + self.crossover_method.__name__ + "_" + \
             self.mutation_method.__name__ + "_" + self.fitness_function.__name__
 
-        root_data_files = './data/'+str(self.endCondition)+"/"
+        root_data_files = './data/' + str(self.endCondition) + "/" + "seed_" + str(self.seed) + "/"
         data_folder = root_data_files + characteristics + "/"
 
         if not os.path.exists(data_folder):
             os.makedirs(data_folder)
 
-        json_file = open(data_folder + '/parameters.json', "w")
+        json_file = open(data_folder + 'parameters.json', "w")
         parameters = {
-            "selection_method": self.selection_method,
+            "selection_method": self.selection_method.__name__,
             "crossover_method": self.crossover_method.__name__,
             "crossover_rate": self.crossover_rate,
             "mutation_method": self.mutation_method.__name__,
@@ -210,63 +222,65 @@ class GeneticAlgorithm:
         csv_file = open(data_folder + "/data.csv", "w", encoding="UTF8", newline="")
         writer = csv.writer(csv_file)
         # Write header
-        writer.writerow(["min_fitness", "max_fitness", "mean", "standart_deviation"])
+        writer.writerow(["min_fitness", "max_fitness", "mean", "standard_deviation",
+                         "nbrCrossovers", "nbrMutation", "probMutation"])
         csv_file.close()
 
         return data_folder
 
     # Main method of ga, Darwin would be proud
-    def evolution(self, indGeneration, fit, crossoverMethod, mutationMethod, insertionMethod, popSize=200,
-                  selectionMethod="tournament", endCondition=(None, 100)):
+    def evolution(self, popSize=200):
         """
         Main function, make the population evolve
-        Generate a csv file with data about the population
-
-        :param indGeneration: Function which generate an individual
-        :param fit: Fitness function to get individual performance
-        :param crossoverMethod: Crossover function to apply
-        :param mutationMethod: Mutation function to apply
-        :param insertionMethod: Insertion function to apply
+        Generate a csv file with data about the population and
+        a json file with the parameters of the model in a "data" folder
 
         :param popSize: Size of the population
-        :param selectionMethod: Selection function to apply (tournament, best or random as a string)
-        :param endCondition: End condition of the simulation (As a tuple, (wantedFitness, nmbGeneration))
 
+        :rtype: list
         :return: The bestest individual
         """
-
         random.seed(self.seed)
 
-        population = self._generatePop(popSize, indGeneration)
+        population = self._generatePop(popSize, self.ind_generation)
 
         generation = 0
 
         # Create a folder to put the data
         data_folder = self._createDataLog()
 
+        # Stats
+        nbrMut = []
+        nbrCross = []
+
         # fit
-        result = self._fitPop(population, fit, data_folder)
+        result = self._fitPop(population, self.fitness_function, data_folder)
         population = result["population_fitness"]
         maxFitness = result["max_fit"]
 
-        while ((endCondition[0] is not None and endCondition[0] < maxFitness) and (generation < endCondition[1])):
+        while (self.endCondition[0] is not None and self.endCondition[0] > maxFitness) and (generation < self.endCondition[1]):
             # select
-            parents = self._select(selectionMethod, population)
+            parents = self._select(self.selection_method, population)
+            children = None
             # cross
             if random.random() < self.crossover_rate:
-                children = self._crossoverPop(crossoverMethod, parents)
+                children = self._crossoverPop(self.crossover_method, parents)
 
-                # mutate
-                if random.random() < self.mutation_rate:
-                    children = self._mutatePop(mutationMethod, children)
+            # mutate
+            # Rajouter un paramètre pour dire si on garde que améliorant ou pas (dans ce cas, créer un clone des enfants pour tester dessus, on jette si c'est inférieur)
+            if random.random() < self.mutation_rate:
+                if children is not None:
+                    children = self._mutatePop(self.mutation_method, children)
+                else:
+                    parents = self._mutatePop(self.mutation_method, [parents[0][0], parents[1][0]])
 
-                children = self._fitPop(children, fit)["population_fitness"]
-
-                # insert
-                population = self._insertion(population, children, insertionMethod)
+            # insert
+            if children is not None:
+                children = self._fitPop(children, self.fitness_function)["population_fitness"]
+                population = self._insertion(population, children, self.insertion_method)
 
             # fit
-            result = self._fitPop(population, fit, data_folder)
+            result = self._fitPop(population, self.fitness_function, data_folder)
             maxFitness = result["max_fit"]
 
             generation += 1

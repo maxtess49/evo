@@ -12,6 +12,7 @@ def ind_zero_array(n):
 
     return lambda : ([0]*n)
 
+
 # Function to calculate the fitness of an individual
 def fit(individual):
     """
@@ -23,6 +24,7 @@ def fit(individual):
     """
 
     return individual.count(1)
+
 
 # Crossover functions
 def monopoint(parents):
@@ -36,7 +38,6 @@ def monopoint(parents):
     """
 
     children = []
-
     while len(children) < 2:
         cut = random.randint(1, len(parents[0])-1)
         children += [parents[0][cut:]+parents[1][:cut]]
@@ -46,6 +47,7 @@ def monopoint(parents):
         children = children[:2]
 
     return children
+
 
 def uniform(parents, p=0.5):
     """
@@ -70,6 +72,12 @@ def uniform(parents, p=0.5):
 
     return children
 
+
+# Dummy crossover
+def dummyCrossover(parents):
+    return parents
+
+
 # Mutation functions
 def bitFlip(ind):
     """
@@ -88,6 +96,7 @@ def bitFlip(ind):
                 ind[i] = 1
 
     return ind
+
 
 def numBitFlip(ind, numGenesFlip):
     """
@@ -108,6 +117,7 @@ def numBitFlip(ind, numGenesFlip):
 
     return ind
 
+
 def oneFlip(ind):
     """
     Mutate the individual by flipping a random genes
@@ -119,6 +129,7 @@ def oneFlip(ind):
 
     return numBitFlip(ind, 1)
 
+
 def threeFlip(ind):
     """
     Mutate the individual by flipping three random genes
@@ -129,6 +140,7 @@ def threeFlip(ind):
     """
 
     return numBitFlip(ind, 3)
+
 
 def fiveFlip(ind):
     """
@@ -142,7 +154,15 @@ def fiveFlip(ind):
     return numBitFlip(ind, 5)
 
 
-# A jeter, faire une roulette gnérique izi
+# Dummy mutation
+def dummyMutation(ind):
+    return ind
+
+
+# Bad mutation
+def geneticDisease(ind):
+    ind[random.randint(len(ind)+1)] = 0
+    return ind
 
 # Possible d'en faire une plus générique en donnent une liste de fonctions et en faisant une liste de proba en fonction de la taille
 # de cette liste, puis si proba, alors return la méthode de la liste de base récupérée

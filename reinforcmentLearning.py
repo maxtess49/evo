@@ -1,37 +1,15 @@
 import random
+import numpy as np
 
 
-# Avec la roulette, renvoyer ptet un array de fois ou chaque opérateur est appelé ?
-# Récupérer peu importe roulette ou pas le nombre de fois que l'opérateur a été appelé
-# Voir comment faire pour que la roulette garde l'info -> renvoyer la méthode utilisée et faire un compteur là dessus ? voir deap
-# Voir comment faire pour utiliser une méthode selon la proba de toutes celles proposées.
-
-# Add a "fixed" wheel ?
-def fixedRoulette(ind, methods):
-    proba_list = [1 / len(methods) for i in range(len(methods))]
-
-    # pmin+1-pmin ? -> si != 1 problème sur la roulette ?
-
+# WHEEL
+def select_op(proba_list):
     r = random.random()
     somme = 0
     i = 0
     while somme < r and i < len(proba_list):
         somme = somme + proba_list[i]
-        if (somme < r):
-            i = i + 1
-    return i
-
-
-def roulette(methods):
-    proba_list = [1 / len(methods) for i in range(len(methods))]
-    # pmin+1-pmin ? -> si != 1 problème sur la roulette ?
-
-    r = random.random()
-    somme = 0
-    i = 0
-    while somme < r and i < len(proba_list):
-        somme = somme + proba_list[i]
-        if (somme < r):
+        if somme < r:
             i = i + 1
     return i
 
@@ -45,20 +23,22 @@ def update_roulette_wheel(reward_list, proba_list, p_min):
         proba_list = [1 / len(proba_list) for i in range(len(proba_list))]
 
 
-# initialisation des structures de stockage des utilités
-def init_reward_list(taille):
-    rewards = [0 for i in range(taille)]
-    return rewards
+# UCB
+# MAJ valeurs UCB
+def update_UCB_val(UCB_val, C, op_history, reward_list, generationCounter):
+    for o in range(len(op_history)):
+        UCB_val[o] = reward_list[o] + C * np.sqrt(
+            generationCounter / (2 * np.log(1 + op_history[o][generationCounter]) + 1))
 
 
-def init_reward_history(taille):
-    rewards = [[0] for i in range(taille)]
-    return rewards
+# sélection operateur
+def select_op_UCB(UCB_val):
+    return UCB_val.index(max(UCB_val))
 
 
-def init_op_history(l, taille):
-    for o in range(taille):
-        l.append([0])
+# Init for UCB
+def init_proba_list_ucb(taille):
+    return [0 for i in range(taille)]
 
 
 FITNESS_OFFSET = 5
@@ -74,7 +54,7 @@ def improvement(val_init, val_mut):
 
 # calcul de moyenne simple
 def update_reward(reward_list, iter, index, value):
-    reward_list[index] = ((iter - 1) * reward_list[index] + value) / (iter)
+    reward_list[index] = ((iter - 1) * reward_list[index] + value) / iter
 
 
 # sliding window
@@ -83,6 +63,6 @@ def update_reward_sliding(reward_list, reward_history, history_size, index, valu
         reward_history[index] = [value]
     else:
         reward_history[index].append(value)
-    if (len(reward_history[index]) > history_size):
+    if len(reward_history[index]) > history_size:
         reward_history[index] = reward_history[index][1:len(reward_history[index])]
     reward_list[index] = sum(reward_history[index]) / len(reward_history[index])

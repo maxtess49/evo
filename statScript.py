@@ -1,31 +1,3 @@
-    # sum_fitness = 0
-    # for element in population_fitness:
-    #     sum_fitness += element[1]
-    #
-    # #Calculate first quartile
-    # firstQuart = (len(population_fitness)+3)/4
-    # if firstQuart.is_integer():
-    #     firstQuart = population_fitness[int(firstQuart) - 1][1]
-    # else:
-    #     firstQuart = (population_fitness[int(firstQuart) - 1][1] + population_fitness[int(firstQuart)][1] * 3) / 4
-    #
-    # # Calculate median
-    # median = (len(population_fitness) + 1) / 2
-    # if median.is_integer():
-    #     median = population_fitness[int(median) - 1][1]
-    # else:
-    #     median = (population_fitness[int(median) - 1][1] + population_fitness[int(median)][1]) / 2
-    #
-    # # Calculate third quartile
-    # thirdQuart = (len(population_fitness) * 3 + 1) / 4
-    # if thirdQuart.is_integer():
-    #     thirdQuart = population_fitness[int(thirdQuart)-1][1]
-    # else:
-    #     thirdQuart = (population_fitness[int(thirdQuart) - 1][1] * 3 + population_fitness[int(thirdQuart)][1]) / 4
-    #
-    # meanFit = sum_fitness/len(population_fitness)
-
-
 import matplotlib.pyplot as plt
 import pandas as pd
 

@@ -107,7 +107,6 @@ def numBitFlip(ind, numGenesFlip):
 
     :return: The mutated individual
     """
-
     bitsToFlip = random.sample(range(len(ind)), numGenesFlip)
     for i in bitsToFlip:
         if ind[i] == 1:
@@ -120,7 +119,7 @@ def numBitFlip(ind, numGenesFlip):
 
 def oneFlip(ind):
     """
-    Mutate the individual by flipping a random genes
+    Mutate the individual by flipping a random gene
 
     :param ind: The individual to mutate
 
@@ -158,10 +157,21 @@ def fiveFlip(ind):
 def dummyMutation(ind):
     return ind
 
+# Random mutation between our 4 main methods -> to compare wheel to random
+def randomMutation(ind):
+    pass
+
 
 # Bad mutation
 def geneticDisease(ind):
-    ind[random.randint(len(ind)+1)] = 0
+    j=0
+    i=0
+    while i < len(ind) and j < 5:
+        if ind[i] == 1:
+            ind[i] = 0
+            j+=1
+        i+=1
+
     return ind
 
 # Possible d'en faire une plus générique en donnent une liste de fonctions et en faisant une liste de proba en fonction de la taille

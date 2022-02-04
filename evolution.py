@@ -1,3 +1,5 @@
+import copy
+
 from selectionFunctions import *
 from insertionFunctions import *
 from onemaxFunctions import *
@@ -6,6 +8,7 @@ import os
 import csv
 import json
 from statistics import pstdev, mean
+
 
 #
 # Author: Maxence Marot
@@ -94,13 +97,12 @@ class GeneticAlgorithm:
         return population
 
     # Fitness
-    def _fitPop(self, individuals, f, dataFolderName=None):
+    def _fitPop(self, individuals, f):
         """
         Function calculating the fitness of an individual by applying a fitness function for each
 
         :param individuals: A list of individuals
         :param f: The function used to calculate the fitness
-        :param dataFolderName: The path to the folder in which we write the population datas
 
         :rtype: dict
         :return: A dict with a list of the individuals plus their fitness, and the highest fit of the population
@@ -111,25 +113,7 @@ class GeneticAlgorithm:
         else:
             population_fitness = [(individual, f(individual)) for individual in individuals]
 
-        maxFit = max(population_fitness, key=lambda fitness: fitness[1])[1]
-
-        if dataFolderName is not None:
-            sum_fitness = 0
-            for element in population_fitness:
-                sum_fitness += element[1]
-
-            # Calculate a bunch of sophisticated (or not) stats
-            meanFit = mean([fitness[1] for fitness in population_fitness])
-            std_dev = pstdev([fitness[1] for fitness in population_fitness], mu=meanFit)
-            minFit = min(population_fitness, key=lambda fitness: fitness[1])[1]
-
-            # Write to csv
-            csv_file = open(dataFolderName+"/data.csv", "a", encoding="UTF8", newline="")
-            writer = csv.writer(csv_file)
-            writer.writerow([str(minFit), str(maxFit), str(meanFit), str(std_dev)])
-            csv_file.close()
-
-        return {"population_fitness": population_fitness, "max_fit": maxFit}
+        return population_fitness
 
     # Selection
     def _select(self, selectionProcess, ind):  # 2 bests, tournament, 2 randoms
@@ -186,7 +170,7 @@ class GeneticAlgorithm:
         :return: the population
         """
 
-        return method(population)+children
+        return method(population) + children
 
     def _createDataLog(self):
         """
@@ -196,8 +180,17 @@ class GeneticAlgorithm:
         :return: The name of the created folder (might remove and make it an attribute)
         """
 
+        mutName = ""
+        if type(self.mutation_method) == list:
+            mutName += "roulette_["
+            for name in self.mutation_method:
+                mutName += name.__name__ + "_"
+            mutName = mutName[:-1] + "]"
+        else:
+            mutName = self.mutation_method.__name__
+
         characteristics = self.selection_method.__name__ + "_" + self.crossover_method.__name__ + "_" + \
-            self.mutation_method.__name__ + "_" + self.fitness_function.__name__
+                           mutName + self.fitness_function.__name__
 
         root_data_files = './data/' + str(self.endCondition) + "/" + "seed_" + str(self.seed) + "/"
         data_folder = root_data_files + characteristics + "/"
@@ -210,7 +203,7 @@ class GeneticAlgorithm:
             "selection_method": self.selection_method.__name__,
             "crossover_method": self.crossover_method.__name__,
             "crossover_rate": self.crossover_rate,
-            "mutation_method": self.mutation_method.__name__,
+            "mutation_method": mutName,
             "mutation_rate": self.mutation_rate,
             "endCondition": self.endCondition,
             "fitness_function": self.fitness_function.__name__,
@@ -222,20 +215,51 @@ class GeneticAlgorithm:
         csv_file = open(data_folder + "/data.csv", "w", encoding="UTF8", newline="")
         writer = csv.writer(csv_file)
         # Write header
-        writer.writerow(["min_fitness", "max_fitness", "mean", "standard_deviation",
-                         "nbrCrossovers", "nbrMutation", "probMutation"])
+        writer.writerow(["generation", "min_fitness", "max_fitness", "mean", "standard_deviation",
+                         "methodsHistory", "probOpe", "improvement"])
         csv_file.close()
 
         return data_folder
 
+    def _writeToDataLog(self, population, dataFolder, generation, opHistory=None, probaList=None, imp=None):
+        """
+        Write data to log for stats & graphs
+
+        :param population: The current population of the AG
+        :param dataFolder: The folder in which we write
+        :param generation: Current generation
+        :param opHistory: Number of time each method was called
+        :param probaList: Evolution of the probability of use of each method
+        """
+        sum_fitness = 0
+        for element in population:
+            sum_fitness += element[1]
+
+        # Calculate a bunch of sophisticated (or not) stats
+        meanFit = mean([fitness[1] for fitness in population])
+        std_dev = pstdev([fitness[1] for fitness in population], mu=meanFit)
+        minFit = min(population, key=lambda fitness: fitness[1])[1]
+        maxFit = max(population, key=lambda fitness: fitness[1])[1]
+
+        # Write to csv
+        csv_file = open(dataFolder + "/data.csv", "a", encoding="UTF8", newline="")
+        writer = csv.writer(csv_file)
+        writer.writerow([str(generation), str(minFit), str(maxFit), str(meanFit), str(std_dev),
+                         str(opHistory), str(probaList), str(imp)])
+        csv_file.close()
+
     # Main method of ga, Darwin would be proud
-    def evolution(self, popSize=200):
+    def evolution(self, popSize=200, reinforcement=None, historySize=10, pmin=0.05, keepImproved=True):
         """
         Main function, make the population evolve
         Generate a csv file with data about the population and
         a json file with the parameters of the model in a "data" folder
 
         :param popSize: Size of the population
+        :param reinforcement: Method of reinforcement to use, None if there is none
+        :param historySize: Size of history used for the reinforcement
+        :param pmin: Min probability of a method for reinforcement wheel
+        :param keepImproved: True if we keep only the improved mutants, False otherwise
 
         :rtype: list
         :return: The bestest individual
@@ -250,49 +274,86 @@ class GeneticAlgorithm:
         data_folder = self._createDataLog()
 
         # Stats
+        taille = 0
+        if type(self.mutation_method) == list and reinforcement is not None:
+            taille = len(self.mutation_method)
+        rewardList = [0 for i in range(taille)]
+        rewardHistory = [[0] for i in range(taille)]
+        probaList = [1 / taille for i in range(taille)]
+        opHistory = [0 for i in range(taille)]
         nbrMut = []
-        nbrCross = []
 
         # fit
-        result = self._fitPop(population, self.fitness_function, data_folder)
-        population = result["population_fitness"]
-        maxFitness = result["max_fit"]
+        population = self._fitPop(population, self.fitness_function)
+        maxFitness = max(population, key=lambda fitness: fitness[1])[1]
 
-        while (self.endCondition[0] is not None and self.endCondition[0] > maxFitness) and (generation < self.endCondition[1]):
+        while (self.endCondition[0] is not None and self.endCondition[0] > maxFitness) \
+                and (generation < self.endCondition[1]):
+
+            generation += 1
+
+            # Reinforcment
+            currentOpe = -1
+            if reinforcement is not None:
+                currentOpe = select_op(probaList)
+                if currentOpe != -1:
+                    nbrMut.append(self.mutation_method[currentOpe])
+
             # select
             parents = self._select(self.selection_method, population)
             children = None
             # cross
             if random.random() < self.crossover_rate:
                 children = self._crossoverPop(self.crossover_method, parents)
+            else:
+                children = (copy.deepcopy(parents[0][0]), copy.deepcopy(parents[1][0]))
+
+            # Fitness for utility
+            initialFitnessP1 = parents[0][1]
+            initialFitnessP2 = parents[1][1]
+            newFitnessC1 = 0
+            newFitnessC2 = 0
 
             # mutate
-            # Rajouter un paramètre pour dire si on garde que améliorant ou pas (dans ce cas, créer un clone des enfants pour tester dessus, on jette si c'est inférieur)
             if random.random() < self.mutation_rate:
-                if children is not None:
-                    children = self._mutatePop(self.mutation_method, children)
-                else:
-                    parents = self._mutatePop(self.mutation_method, [parents[0][0], parents[1][0]])
+                mutation_m = self.mutation_method
+                if reinforcement is not None:
+                    mutation_m = self.mutation_method[currentOpe]
+
+                children = self._mutatePop(mutation_m, children)
+
+            # Fitness calculus
+            children = self._fitPop(children, self.fitness_function)
+            newFitnessC1 = children[0][1]
+            newFitnessC2 = children[1][1]
+
+            # MAJ des utilités
+            # For the improvement, we use the mean of the fitness
+            imp = improvement((initialFitnessP1 + initialFitnessP2) / 2, (newFitnessC1 + newFitnessC2) / 2)
+            update_reward_sliding(rewardList, rewardHistory, historySize, currentOpe, imp)
+
+
+            # MAJ roulette
+            update_roulette_wheel(rewardList, probaList, pmin)
 
             # insert
-            if children is not None:
-                children = self._fitPop(children, self.fitness_function)["population_fitness"]
+            if keepImproved:
+                if imp > 0:
+                    population = self._insertion(population, children, self.insertion_method)
+            else:
                 population = self._insertion(population, children, self.insertion_method)
 
-            # fit
-            result = self._fitPop(population, self.fitness_function, data_folder)
-            maxFitness = result["max_fit"]
+            maxFitness = max(population, key=lambda fitness: fitness[1])[1]
 
-            generation += 1
+            for o in range(len(self.mutation_method)):
+                if o == currentOpe:
+                    opHistory[o] += 1
+
+            print(generation)
+            print(rewardList)
+            print(rewardHistory)
+            print(probaList)
+            print("------------")
+            self._writeToDataLog(population, data_folder, generation, opHistory, probaList, imp)
 
         return bestSelection(population, 1)
-
-
-# Notes à moi même, ce que je peux faire pour compter les méthodes, c'est juste garder une variable que j'incrémente à chaque fois qu'un appel est passé
-# Et pour la roulette, au lieu d'utiliser un int, j'utilise un tableau, et j'incrémente là où il faut, puis pour ajouter dans le csv
-# Je mets juste dans le header le nom de la fonction utilisée, et je me débrouille pour que si c'est la roulette, je mets les méthodes de la roulettes séparées par des ;
-# et pour mettre le nombre d'utilisation des méthodes de la roulette, je mets chaque valeur du tableau séparées par des ; aussi
-
-# Peut être que je dois garder la proba aussi pour les méthodes de la roulette ?
-
-# Compter nombre de cross / de mutations et de fitness ?

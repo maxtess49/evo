@@ -21,7 +21,7 @@
 - [X] Age (Olders are discarded)
 
 ### Auto adjustment method
-- [ ] Wheel
+- [X] Wheel
 - [ ] Bandit
 - [ ] Adaptative pursuit
 
@@ -42,11 +42,8 @@
 
 #### Notes
 
-mutation prise que si améliorant, attention, il faut cloner les listes en python pour pas modifier la liste d'origine
-
-toujours vérifier si y'a des biais (genre premier choix pour même utilité d'opérateur), c'est le plus important tout le temps
-
-voir moodle et notebook pour "s'inspirer"
+toujours vérifier si y'a des biais 
+(genre premier choix pour même utilité d'opérateur), c'est le plus important tout le temps
 
 ## How-To
 Comming soon

@@ -192,8 +192,8 @@ class GeneticAlgorithm:
         characteristics = self.selection_method.__name__ + "_" + self.crossover_method.__name__ + "_" + \
                            mutName + self.fitness_function.__name__
 
-        root_data_files = './data/' + str(self.endCondition) + "/" + "seed_" + str(self.seed) + "/"
-        data_folder = root_data_files + characteristics + "/"
+        root_data_files = './data/' + str(self.endCondition) + "/"
+        data_folder = root_data_files + characteristics + "/" + "seed_" + str(self.seed) + "/"
 
         if not os.path.exists(data_folder):
             os.makedirs(data_folder)
@@ -330,11 +330,12 @@ class GeneticAlgorithm:
             # MAJ des utilités
             # For the improvement, we use the mean of the fitness
             imp = improvement((initialFitnessP1 + initialFitnessP2) / 2, (newFitnessC1 + newFitnessC2) / 2)
-            update_reward_sliding(rewardList, rewardHistory, historySize, currentOpe, imp)
+            if reinforcement is not None:
+                update_reward_sliding(rewardList, rewardHistory, historySize, currentOpe, imp)
 
 
-            # MAJ roulette
-            update_roulette_wheel(rewardList, probaList, pmin)
+                # MAJ roulette
+                update_roulette_wheel(rewardList, probaList, pmin)
 
             # insert
             if keepImproved:
@@ -345,15 +346,11 @@ class GeneticAlgorithm:
 
             maxFitness = max(population, key=lambda fitness: fitness[1])[1]
 
-            for o in range(len(self.mutation_method)):
-                if o == currentOpe:
-                    opHistory[o] += 1
+            if reinforcement is not None:
+                for o in range(len(self.mutation_method)):
+                    if o == currentOpe:
+                        opHistory[o] += 1
 
-            print(generation)
-            print(rewardList)
-            print(rewardHistory)
-            print(probaList)
-            print("------------")
             self._writeToDataLog(population, data_folder, generation, opHistory, probaList, imp)
 
         return bestSelection(population, 1)

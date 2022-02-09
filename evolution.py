@@ -292,7 +292,7 @@ class GeneticAlgorithm:
 
             generation += 1
 
-            # Reinforcment
+            # Reinforcement
             currentOpe = -1
             if reinforcement is not None:
                 currentOpe = select_op(probaList)

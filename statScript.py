@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import onemaxFunctions
 
 # Pandas mean on a dataframe of the columns to mean
 
@@ -58,6 +59,9 @@ def makeGraf(folder, listOp):
                      maxOpe = historyMethodsMean[-1][o]
                      if lengthGraf < maxOpe:
                             lengthGraf = maxOpe
+
+                     if lengthGraf < max(mean["max_fitness"]):
+                            lengthGraf = max(mean["max_fitness"])
               ax.set(xlim=(-1, maxGen*1.1),
                      ylim=(-1, lengthGraf * 1.1),
                      xlabel="Generation", ylabel="fitness/Application of operations",
@@ -78,7 +82,7 @@ def makeGraf(folder, listOp):
                         mean["mean"] - mean["standard_deviation"], color="gray", label="standard deviation")
 
        plt.grid()
-       plt.savefig(folder + "/fig_use_and_fitness_per_gen.png")
+       #plt.savefig(folder + "/fig_use_and_fitness_per_gen.png")
        plt.show()
 
        if listOp is not None:
@@ -96,7 +100,7 @@ def makeGraf(folder, listOp):
                      title='Percentage of use of operation per fitness max of the population')
               plt.legend()
               plt.grid()
-              plt.savefig(folder + "/fig_percentage_per_fit.png")
+              #plt.savefig(folder + "/fig_percentage_per_fit.png")
               plt.show()
 
               # Percentage per gen graf
@@ -113,7 +117,7 @@ def makeGraf(folder, listOp):
                      title='Percentage of use of operation per generation')
               plt.legend()
               plt.grid()
-              plt.savefig(folder + "/fig_percentage_per_gen.png")
+              #plt.savefig(folder + "/fig_percentage_per_gen.png")
               plt.show()
 
 
@@ -127,94 +131,5 @@ def stringSeriesToList(column):
               result += [tmp]
        return result
 
-# df = pd.read_csv('/home/etud/PycharmProjects/evo/data/(1000, 15000)/tournamentSelection_monopoint_roulette_[oneFlip_threeFlip_fiveFlip]fit/seed_516299/data.csv')
-# listOp= ["1flip", '3flip', "5flip"]
-# generation = df["generation"]
-# minF = df["min_fitness"]
-# maxF = df["max_fitness"]
-# mean = df['mean']
-# std = df['standard_deviation']
-# methodsHistory = df["methodsHistory"]
-# probHistory = df["probOpe"]
-#
-# total = []
-# for histo in methodsHistory:
-#        tmp = histo.strip("[]").split(", ")
-#        for i in range(len(tmp)):
-#               tmp[i] = int(tmp[i])
-#        total += [tmp]
-#
-#
-# fig = plt.figure()
-# ax = plt.axes()
-# ax.plot(generation, mean)
-# ax.plot(generation, minF)
-# ax.plot(generation, maxF)
-#
-# listOfOp = [[t[o] for t in total] for o in range(len(listOp))]
-# for o in range(len(listOp)):
-#        plt.plot(listOfOp[o], label=str(listOp[o]))
-#
-# maxOp = 0
-# for o in range(len(listOp)):
-#        maxTmp = total[-1][o]
-#        if maxOp < maxTmp:
-#               maxOp = maxTmp
-#
-# ax.set(xlim=(-len(df.index)/10, len(df.index) +len(df.index)/10),
-#        ylim=(-1, maxOp*1.1),
-#        xlabel="Generation", ylabel="fitness/Application of operations",
-#        title='mean fitness and operation usage per generation')
-# plt.legend()
-#
-# plt.fill_between(generation, mean+std, mean-std, color="gray")
-#
-# plt.grid()
-#
-# plt.show()
-#
-# #################################
-# fig = plt.figure()
-# ax = plt.axes()
-# total = []
-# for prob in probHistory:
-#        tmp = prob.strip("[]").split(", ")
-#        for i in range(len(tmp)):
-#               tmp[i] = float(tmp[i])
-#        total += [tmp]
-#
-# listOfProb = [[t[o] for t in total] for o in range(len(listOp))]
-#
-# for o in range(len(listOp)):
-#        plt.plot(generation, listOfProb[o], label=str(listOp[o]))
-#
-# ax.set(xlim=(-1, max(generation)*1.1),
-#        ylim=(-0.1, 1.1),
-#        xlabel="Generation", ylabel="fitness/Application of operations",
-#        title='mean fitness and operation usage per generation')
-# plt.legend()
-# plt.grid()
-# plt.show()
-#
-# #################################
-# fig = plt.figure()
-# ax = plt.axes()
-# total = []
-# for prob in probHistory:
-#        tmp = prob.strip("[]").split(", ")
-#        for i in range(len(tmp)):
-#               tmp[i] = float(tmp[i])
-#        total += [tmp]
-#
-# listOfProb = [[t[o] for t in total] for o in range(len(listOp))]
-#
-# for o in range(len(listOp)):
-#        plt.plot(maxF, listOfProb[o], label=str(listOp[o]))
-#
-# ax.set(xlim=(-1, max(maxF)*1.1),
-#        ylim=(-0.1, 1.1),
-#        xlabel="Generation", ylabel="fitness/Application of operations",
-#        title='mean fitness and operation usage per generation')
-# plt.legend()
-# plt.grid()
-# plt.show()
+makeGraf("/home/etud/PycharmProjects/evo/data/(1000, 40000)/tournamentSelection_monopoint_roulette_[oneFlip_threeFlip_fiveFlip_bitFlip]fit/",
+         [onemaxFunctions.oneFlip, onemaxFunctions.threeFlip, onemaxFunctions.fiveFlip, onemaxFunctions.bitFlip])

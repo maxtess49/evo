@@ -30,20 +30,14 @@
 - [X] Random seed choice
 
 ### Graf generator
-- [ ] Add generator to main
-- [ ] Add types of grafs (comparison of method frequency for wheel)
+- [X] Add generator to main
+- [X] Add types of grafs (comparison of method frequency for wheel)
 
 ### Important
 - [ ] Check for bias
 
 ### Test
 - [X] Add mutation operators to test
-
-
-#### Notes
-
-toujours vérifier si y'a des biais 
-(genre premier choix pour même utilité d'opérateur), c'est le plus important tout le temps
 
 ## How-To
 Comming soon

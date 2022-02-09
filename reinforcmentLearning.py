@@ -22,25 +22,6 @@ def update_roulette_wheel(reward_list, proba_list, p_min):
     else:
         proba_list = [1 / len(proba_list) for i in range(len(proba_list))]
 
-
-# UCB
-# MAJ valeurs UCB
-def update_UCB_val(UCB_val, C, op_history, reward_list, generationCounter):
-    for o in range(len(op_history)):
-        UCB_val[o] = reward_list[o] + C * np.sqrt(
-            generationCounter / (2 * np.log(1 + op_history[o][generationCounter]) + 1))
-
-
-# sélection operateur
-def select_op_UCB(UCB_val):
-    return UCB_val.index(max(UCB_val))
-
-
-# Init for UCB
-def init_proba_list_ucb(taille):
-    return [0 for i in range(taille)]
-
-
 FITNESS_OFFSET = 5
 
 

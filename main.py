@@ -43,9 +43,9 @@ def main():
 
                     # Call to GA
                     if type(method) == list:
-                        results += [ag.evolution(popSize=50, reinforcement="roulette")[0][1]]
+                        results += [ag.evolution(popSize=100, reinforcement="roulette")[0][1]]
                     else:
-                        results += [ag.evolution(popSize=50)[0][1]]
+                        results += [ag.evolution(popSize=100)[0][1]]
 
                     mutName = ""
 
